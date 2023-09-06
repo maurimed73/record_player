@@ -82,6 +82,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                     children: [
                       //Entrada
                       GestureDetector(
+                        // UM TOQUE PLAY MÚSICA
                         onTap: () {
                           setState(() {
                             entrada.icon == Icons.play_arrow
@@ -93,6 +94,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                 : entrada.cor = Colors.amber;
                           });
                         },
+                        // ARRASTA PARA CIMA EDITA O PAD
                         onVerticalDragStart: (details) {
                           setState(() {
                             config = false;

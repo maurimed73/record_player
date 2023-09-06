@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSwatch(),
         useMaterial3: false,
       ),
-      home: const MissaSamples(),
+      home: const MyHomePage(),
     );
   }
 }
@@ -142,9 +142,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     if (f is File) {
                       print('Found file ${f.path}');
                     } else if (f is Directory) {
-                      print('Found dir ${f.path}');
+                      print('Diretório encontrado ${f.path}');
                     }
                   }
+                  // await for (final FileSystemEntity f in dirList) {
+                  //   if (f is File) {
+                  //     print('Found file ${f.path}');
+                  //     f.delete();
+                  //   }
+                  // }
                 } catch (e) {
                   print(e.toString());
                 }
