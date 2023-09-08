@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:record_player/painelComandos/comandos.dart';
 import 'package:record_player/screens/missa.dart';
+import 'dart:io' as io;
 
 void main() {
   runApp(const MyApp());
@@ -23,7 +25,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSwatch(),
         useMaterial3: false,
       ),
-      home: const MyHomePage(),
+      home: const MissaSamples(),
+      //home: const MyHomePage(),
     );
   }
 }
@@ -41,8 +44,22 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isRecording = false;
   String audioPath = '';
 
+  //Declare Globaly
+  late String directory;
+  List file = [];
+
+  void _listofFiles() async {
+    directory = "/storage/emulated/0/Android/data/"; //Give your folder path
+    setState(() {
+      file =
+          io.Directory("///data/user/0/com.example.record_player/app_flutter/")
+              .listSync(); //use your folder name insted of resume.
+    });
+  }
+
   @override
   void initState() {
+    _listofFiles();
     audioPlayer = AudioPlayer();
     audioRecord = Record();
     super.initState();
@@ -55,50 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Future<void> stopRecording() async {
-    try {
-      String? path = await audioRecord.stop();
-      print(path);
-      setState(() {
-        isRecording = false;
-        audioPath = path!;
-      });
-    } catch (e) {
-      print('Error Stopping Record: $e');
-    }
-  }
-
-  Future<void> startRecording() async {
-    try {
-      if (await audioRecord.hasPermission()) {
-        await audioRecord.start(
-            numChannels: 1,
-            path:
-                '/data/user/0/com.example.record_player/app_flutter/teste4.m4a');
-        setState(() {
-          isRecording = true;
-        });
-      }
-    } catch (e) {
-      print('Error Start Recording : $e');
-    }
-  }
-
-  Future<String> get _localPath async {
-    final directory = await getApplicationDocumentsDirectory();
-    print('O Diretório é: ${directory.uri}');
-    return directory.path;
-  }
-
-  Future<void> playRecording() async {
-    try {
-      Source urlSource = UrlSource(
-          "/data/user/0/com.example.record_player/app_flutter/teste4.m4a");
-      await audioPlayer.play(urlSource);
-    } catch (e) {
-      print('Error Play audio: $e');
-    }
-  }
+  TextEditingController tipoMusica = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -110,47 +84,79 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            TextField(
+              controller: tipoMusica,
+            ),
             if (isRecording)
               const Text(
                 'Recording in Progress',
                 style: TextStyle(fontSize: 20),
               ),
+
+            // botão de gravação
             ElevatedButton(
-              onPressed: isRecording ? stopRecording : startRecording,
+              onPressed: () {
+                if (isRecording) {
+                  Comandos().stopRecording();
+                  //stopRecording();
+                  setState(() {
+                    isRecording = false;
+                  });
+                } else {
+                  //startRecording(tipoMusica.text.toString());
+                  setState(() {
+                    isRecording = true;
+                  });
+                  Comandos().startRec(tipoMusica.text.toString());
+                }
+              },
               child: isRecording
                   ? const Text('Stop Recording')
                   : const Text('Start Recording'),
             ),
+
             SizedBox(
               height: 25,
             ),
             if (!isRecording && audioPath != null)
+
+              // botão de tocar gravação
               ElevatedButton(
-                onPressed: playRecording,
+                onPressed: () {
+                  Comandos().playMusic(audioPlayer);
+                },
                 child: const Text('Play Recording'),
               ),
+
             SizedBox(
               height: 25,
             ),
+
+            // botão de listar arquivos
             ElevatedButton(
               onPressed: () async {
                 var dir = Directory(
-                    '///data/user/0/com.example.record_player/app_flutter/');
+                    'data/user/0/com.example.record_player/app_flutter/');
+
                 try {
                   var dirList = dir.list();
                   await for (final FileSystemEntity f in dirList) {
                     if (f is File) {
-                      print('Found file ${f.path}');
+                      print('PATH ${f.path}');
+                      audioPath = f.path;
                     } else if (f is Directory) {
-                      print('Diretório encontrado ${f.path}');
+                      // print('Diretório encontrado ${f.path}');
                     }
                   }
                   // await for (final FileSystemEntity f in dirList) {
                   //   if (f is File) {
-                  //     print('Found file ${f.path}');
                   //     f.delete();
+                  //     print('Found file ${f.path}');
                   //   }
-                  // }
+
+                  File arquivo = new File(audioPath);
+                  String fileName = arquivo.path.split('/').last;
+                  print('o arquivo é o  $fileName');
                 } catch (e) {
                   print(e.toString());
                 }
