@@ -1,14 +1,17 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'package:record_player/screens/telaGravacao.dart';
+import 'package:record_player/estado/controller.dart';
 import 'package:record_player/models/padMissa.dart';
-import 'package:record_player/painelComandos/botoesMissa/aclamacao.dart';
-import 'package:record_player/painelComandos/botoesMissa/ato.dart';
-import 'package:record_player/painelComandos/botoesMissa/entrada.dart';
-import 'package:record_player/painelComandos/botoesMissa/gloria.dart';
-import 'package:record_player/painelComandos/botoesMissa/salmo.dart';
+
 import 'package:record_player/estado/gerencia_estado.dart';
 import 'package:record_player/Data/dadosMissa.dart';
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:record_player/widgets/botao_funcao.dart';
 
 class MissaSamples extends StatefulWidget {
   const MissaSamples({super.key});
@@ -20,6 +23,9 @@ class MissaSamples extends StatefulWidget {
 class _MissaSamplesState extends State<MissaSamples> {
   final audio = AudioPlayer();
   final playerEntrada = AudioPlayer();
+  Duration durationEntrada = Duration.zero;
+  Duration positionEntrada = Duration.zero;
+  bool isRecording = false;
 
   final playerAto = AudioPlayer();
   final playerGloria = AudioPlayer();
@@ -33,14 +39,15 @@ class _MissaSamplesState extends State<MissaSamples> {
   final playerFinal = AudioPlayer();
   final playerOpcional = AudioPlayer();
   final recorded = Record();
-  String audioPath =
-      "/data/user/0/com.example.record_player/app_flutter/teste4.m4a";
+  String audioPath = "";
 
-  List<String> listaSamples = [
-    "",
-    "",
-    "",
-  ];
+  String formatTime(int seconds) {
+    return '${(Duration(seconds: seconds))}'.split('.')[0].padLeft(3, '0');
+  }
+
+  ControllerMissa controller = ControllerMissa();
+
+  List<String> listaSamples = [];
 
   final store = MissaStore();
   final canto = DadosPadMissa();
@@ -49,6 +56,27 @@ class _MissaSamplesState extends State<MissaSamples> {
   void initState() {
     super.initState();
     store.config = true;
+    playerEntrada.onPlayerStateChanged.listen((state) {
+      setState(() {
+        isPlayingEntrada = state == PlayerState.playing;
+      });
+    });
+    playerEntrada.onDurationChanged.listen((newDuration) {
+      setState(() {
+        durationEntrada = newDuration;
+      });
+    });
+    playerEntrada.onPositionChanged.listen((newPosition) {
+      setState(() {
+        positionEntrada = newPosition;
+      });
+    });
+
+    recorded.onStateChanged().listen((state) {
+      setState(() {
+        isRecording = state == RecordState.record;
+      });
+    });
   }
 
   @override
@@ -71,18 +99,17 @@ class _MissaSamplesState extends State<MissaSamples> {
   bool isPlayingComunhao2 = false;
   bool isPlayingFinal = false;
   bool isPlayingOpcional = false;
+  late Duration songLength;
 
   @override
   Widget build(BuildContext context) {
-    print('Começou novamente');
-    print('valor do config: ${store.config}');
     return ListenableBuilder(
       listenable: store,
       builder: (BuildContext context, Widget? child) {
         return Scaffold(
           appBar: AppBar(
             title: const Text(
-              'Página de samples Missa',
+              'Tela Missa.dart',
               textAlign: TextAlign.center,
             ),
           ),
@@ -92,13 +119,15 @@ class _MissaSamplesState extends State<MissaSamples> {
                   ? Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: GridView(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 5),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 2,
+                                mainAxisSpacing: 2),
                         children: [
                           //Entrada
                           GestureDetector(
+                            // UM TOQUE PLAY MÚSICA
                             onTap: () {
                               setState(() {
                                 if (canto.entrada.isPlaying == null ||
@@ -106,6 +135,9 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.entrada.icon = Icons.stop;
                                   canto.entrada.cor = Colors.green;
                                   canto.entrada.isPlaying = true;
+
+                                  // playerEntrada.play(DeviceFileSource(
+                                  //     '/data/user/0/com.example.record_player/app_flutter/ntrada.m4a'));
 
                                   playerEntrada.play(DeviceFileSource(
                                       '/data/user/0/com.example.record_player/app_flutter/Entrada.m4a'));
@@ -115,9 +147,12 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.entrada.cor = Colors.amber;
                                   canto.entrada.isPlaying = false;
                                 }
-                                isPlayingEntrada = !isPlayingEntrada;
+                                isPlayingAto = !isPlayingAto;
                               });
                             },
+
+                            // ARRASTA PARA CIMA EDITA O PAD
+
                             onVerticalDragStart: (details) {
                               if (isPlayingEntrada != true) {
                                 print('Entrei no config');
@@ -133,6 +168,20 @@ class _MissaSamplesState extends State<MissaSamples> {
                                 print('Não entrei no config');
                               }
                             },
+
+                            // SEGURA PARA ENTRAR NA GRAVAÇÃO
+                            onLongPress: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => TelaGravacao(
+                                        title:
+                                            'TelaGravação - ${canto.entrada.texto}',
+                                        tipoMusica: 'Entrada')),
+                              );
+                              print('gravação iniciada');
+                            },
+
                             child: Container(
                               height: 100,
                               width: 100,
@@ -214,7 +263,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Gloria.isPlaying = true;
 
                                   playerGloria.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Gloria.m4a'));
                                 } else {
                                   playerGloria.stop();
                                   canto.Gloria.icon = Icons.play_arrow;
@@ -268,7 +317,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Salmo.isPlaying = true;
 
                                   playerSalmo.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Salmo.m4a'));
                                 } else {
                                   playerSalmo.stop();
                                   canto.Salmo.icon = Icons.play_arrow;
@@ -321,7 +370,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Aclamacao.isPlaying = true;
 
                                   playerAcla.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Aclamacao.m4a'));
                                 } else {
                                   playerAcla.stop();
                                   canto.Aclamacao.icon = Icons.play_arrow;
@@ -374,7 +423,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Ofertorio.isPlaying = true;
 
                                   playerOfertorio.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Ofertorio.m4a'));
                                 } else {
                                   playerOfertorio.stop();
                                   canto.Ofertorio.icon = Icons.play_arrow;
@@ -427,7 +476,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Santo.isPlaying = true;
 
                                   playerSanto.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Santo.m4a'));
                                 } else {
                                   playerSanto.stop();
                                   canto.Santo.icon = Icons.play_arrow;
@@ -479,7 +528,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Cordeiro.isPlaying = true;
 
                                   playerCordeiro.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Cordeiro.m4a'));
                                 } else {
                                   playerCordeiro.stop();
                                   canto.Cordeiro.icon = Icons.play_arrow;
@@ -532,7 +581,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Comunhao1.isPlaying = true;
 
                                   playerComunhao.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Comunhao1.m4a'));
                                 } else {
                                   playerComunhao.stop();
                                   canto.Comunhao1.icon = Icons.play_arrow;
@@ -585,7 +634,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Comunhao2.isPlaying = true;
 
                                   playerComunhao2.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Comunhao2.m4a'));
                                 } else {
                                   playerComunhao2.stop();
                                   canto.Comunhao2.icon = Icons.play_arrow;
@@ -626,6 +675,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                               ),
                             ),
                           ),
+
                           //Final
                           GestureDetector(
                             onTap: () {
@@ -637,7 +687,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.Final.isPlaying = true;
 
                                   playerFinal.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Final.m4a'));
                                 } else {
                                   playerFinal.stop();
                                   canto.Final.icon = Icons.play_arrow;
@@ -677,6 +727,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                               ),
                             ),
                           ),
+
                           //opcional
                           GestureDetector(
                             onTap: () {
@@ -688,7 +739,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.opcional.isPlaying = true;
 
                                   playerOpcional.play(DeviceFileSource(
-                                      '/data/user/0/com.example.record_player/app_flutter/Ato.m4a'));
+                                      '/data/user/0/com.example.record_player/app_flutter/Opcional.m4a'));
                                 } else {
                                   playerOpcional.stop();
                                   canto.opcional.icon = Icons.play_arrow;
@@ -739,19 +790,80 @@ class _MissaSamplesState extends State<MissaSamples> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Text(
+                          ElevatedButton(
+                              onPressed: () async {
+                                //Criar diretório
+                                final Directory extDir =
+                                    await getApplicationDocumentsDirectory();
+                                final String dirPath = '${extDir.path}/Missa1';
+
+                                await new Directory(dirPath)
+                                    .create(recursive: true);
+                                // final String filePath = '$dirPath.mp4';
+                                // print(filePath);
+
+                                var dir = Directory(
+                                    'data/user/0/com.example.record_player/app_flutter/');
+
+                                try {
+                                  var dirList = dir.list();
+
+                                  await for (final FileSystemEntity f
+                                      in dirList) {
+                                    if (f is File) {
+                                      //print('PATH ${f.path}');
+                                      audioPath = f.path;
+                                      File arquivo = File(audioPath);
+                                      String fileName =
+                                          arquivo.path.split('/').last;
+                                      listaSamples.add(fileName);
+                                      print(fileName);
+                                    } else if (f is Directory) {
+                                      print('Diretório encontrado ${f.path}');
+                                    }
+                                  }
+                                  // await for (final FileSystemEntity f
+                                  //     in dirList) {
+                                  //   if (f is File) {
+                                  //     f.delete();
+                                  //     print('Found file ${f.path}');
+                                  //   }
+                                  // }
+
+                                  // print(listaSamples);
+                                  // File arquivo = File(audioPath);
+                                  // String fileName =
+                                  //     arquivo.path.split('/').last;
+                                  // print('o arquivo é o  $fileName');
+                                } catch (e) {
+                                  print(e.toString());
+                                }
+                                // Directory dir = new Directory(
+                                //     '///data/user/0/com.example.record_player/app_flutter/');
+                                // List<FileSystemEntity> files =
+                                //     dir.listSync(recursive: true);
+                                // for (FileSystemEntity file in files) {
+                                //   FileStat f1 = file.statSync();
+                                //   print(file.absolute);
+                                //   print(f1.toString());
+                                // }
+                              },
+                              child: const Text('Listar arquivos')),
+                          ElevatedButton(
+                              onPressed: () {}, child: const Text('Procurar')),
+                          const Text(
                             'Config',
                             style: TextStyle(fontSize: 30),
                           ),
                           objetoConfig == null
-                              ? Text('')
+                              ? const Text('')
                               : Text('Nome: ${objetoConfig!.texto}'),
                           ElevatedButton(
                             onPressed: () {
                               store.getAlterarConfig();
-                              setState(() {});
+                              //setState(() {});
                             },
-                            child: Text('Voltar'),
+                            child: const Text('Voltar'),
                           ),
                         ],
                       ),

@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:record_player/estado/controller.dart';
 import 'package:record_player/estado/gerencia_estado.dart';
 import 'package:record_player/models/padMissa.dart';
 
@@ -13,16 +14,18 @@ class EntradaPad extends StatefulWidget {
 
 class _EntradaPadState extends State<EntradaPad> {
   final playerEntrada = AudioPlayer();
-  PadMissa entrada = PadMissa(
-      texto: 'Entrada',
-      icon: Icons.play_arrow,
-      cor: Colors.amber,
-      isPlaying: false);
 
   PadMissa? objetoConfig;
 
   final store = MissaStore();
   bool isPlayingEntrada = false;
+  final controllerEntrada = ControllerMissa();
+
+  PadMissa entrada = PadMissa(
+      texto: 'Entrada',
+      icon: Icons.play_arrow,
+      cor: Colors.amber,
+      isPlaying: false);
 
   @override
   Widget build(contexto) {
@@ -32,22 +35,33 @@ class _EntradaPadState extends State<EntradaPad> {
         return GestureDetector(
           // UM TOQUE PLAY MÚSICA
           onTap: () {
-            setState(() {
-              entrada.icon == Icons.play_arrow
-                  ? entrada.icon = Icons.stop
-                  : entrada.icon = Icons.play_arrow;
-
-              entrada.cor == Colors.amber
-                  ? entrada.cor = Colors.green
-                  : entrada.cor = Colors.amber;
-
-              entrada.icon == Icons.play_arrow
-                  ? entrada.isPlaying = true
-                  : entrada.isPlaying = false;
-
-              isPlayingEntrada = !isPlayingEntrada;
-            });
+            controllerEntrada.alterarEntrada();
+            if (controllerEntrada.entradaTocando.value) {
+              entrada.cor = Colors.green;
+            } else {
+              entrada.cor = Colors.amber;
+            }
+            setState(() {});
           },
+
+          onDoubleTap: () {
+            if (!controllerEntrada.entradaTocando.value) {
+              print('Entrei no config, audio está parado');
+            } else {
+              print(
+                  'Não posso entrar no config pois o áudio está sendo executado');
+            }
+          },
+
+          onLongPress: () {
+            if (!controllerEntrada.entradaTocando.value) {
+              print('Entrei no modo gravação, audio está parado');
+            } else {
+              print(
+                  'Não posso entrar no modo gravação pois o áudio está sendo executado');
+            }
+          },
+
           onVerticalDragStart: (details) {
             if (isPlayingEntrada != true) {
               print('Entrei no config');
@@ -59,6 +73,7 @@ class _EntradaPadState extends State<EntradaPad> {
                   isPlaying: false);
 
               print('deu certo vertical');
+              print('ok');
             } else {
               print('Não entrei no config');
             }

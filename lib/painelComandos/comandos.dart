@@ -42,9 +42,9 @@ class Comandos {
     return false;
   }
 
-  void playMusic(entrada) {
+  void playMusic(entrada, tipoMusica) {
     Source urlSource = UrlSource(
-        "/data/user/0/com.example.record_player/app_flutter/Santo.m4a");
+        "/data/user/0/com.example.record_player/app_flutter/$tipoMusica.m4a");
     entrada.play(urlSource);
   }
 

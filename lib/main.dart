@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:record_player/screens/telaGravacao.dart';
 import 'package:record_player/painelComandos/comandos.dart';
 import 'package:record_player/screens/missa.dart';
 import 'dart:io' as io;
@@ -20,13 +21,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'Record Player',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSwatch(),
         useMaterial3: false,
       ),
       home: const MissaSamples(),
       //home: const MyHomePage(),
+
+      //home: MusicaEntrada(title: 'Meu Estudo', tipoMusica: 'Entrada'),
     );
   }
 }
@@ -123,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
               // botão de tocar gravação
               ElevatedButton(
                 onPressed: () {
-                  Comandos().playMusic(audioPlayer);
+                  Comandos().playMusic(audioPlayer, 'Entrada');
                 },
                 child: const Text('Play Recording'),
               ),
@@ -135,9 +138,23 @@ class _MyHomePageState extends State<MyHomePage> {
             // botão de listar arquivos
             ElevatedButton(
               onPressed: () async {
-                var dir = Directory(
-                    'data/user/0/com.example.record_player/app_flutter/');
+                //Criar diretório
+                final Directory extDir =
+                    await getApplicationDocumentsDirectory();
+                final String dirPath = '${extDir.path}/Missa1';
 
+                await new Directory(dirPath).create(recursive: true);
+                // final String filePath = '$dirPath.mp4';
+                // print(filePath);
+
+                //Deletar diretório
+                // final direc = Directory(
+                //     'data/user/0/com.example.record_player/app_flutter/dir');
+                // direc.deleteSync(recursive: true);
+
+                //listar diretório
+                var dir = Directory(
+                    'data/user/0/com.example.record_player/app_flutter');
                 try {
                   var dirList = dir.list();
                   await for (final FileSystemEntity f in dirList) {
@@ -145,15 +162,20 @@ class _MyHomePageState extends State<MyHomePage> {
                       print('PATH ${f.path}');
                       audioPath = f.path;
                     } else if (f is Directory) {
-                      // print('Diretório encontrado ${f.path}');
+                      print('Diretório encontrado ${f.path}');
                     }
                   }
+
+                  // Apagar items do diretório
                   // await for (final FileSystemEntity f in dirList) {
                   //   if (f is File) {
                   //     f.delete();
                   //     print('Found file ${f.path}');
                   //   }
+                  // }
+                  // ;
 
+                  // listar somente nome do arquivo no diretório
                   File arquivo = new File(audioPath);
                   String fileName = arquivo.path.split('/').last;
                   print('o arquivo é o  $fileName');
