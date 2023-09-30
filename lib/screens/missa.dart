@@ -22,7 +22,7 @@ class MissaSamples extends StatefulWidget {
 
 class _MissaSamplesState extends State<MissaSamples> {
   final audio = AudioPlayer();
-  final playerEntrada = AudioPlayer();
+  var playerEntrada;
   Duration durationEntrada = Duration.zero;
   Duration positionEntrada = Duration.zero;
   bool isRecording = false;
@@ -147,7 +147,7 @@ class _MissaSamplesState extends State<MissaSamples> {
                                   canto.entrada.cor = Colors.amber;
                                   canto.entrada.isPlaying = false;
                                 }
-                                isPlayingAto = !isPlayingAto;
+                                isPlayingEntrada = !isPlayingEntrada;
                               });
                             },
 
