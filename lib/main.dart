@@ -23,8 +23,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Record Player',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSwatch(),
-        useMaterial3: false,
+        colorScheme: ColorScheme.light(),
+        useMaterial3: true,
       ),
       home: const MissaSamples(),
       //home: const MyHomePage(),
@@ -166,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   }
 
-                  // Apagar items do diretório
+                  //Apagar items do diretório
                   // await for (final FileSystemEntity f in dirList) {
                   //   if (f is File) {
                   //     f.delete();

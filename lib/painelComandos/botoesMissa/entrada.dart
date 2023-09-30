@@ -1,99 +1,94 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:record_player/estado/controller.dart';
+import 'package:record_player/Data/dadosMissa.dart';
 import 'package:record_player/estado/gerencia_estado.dart';
 import 'package:record_player/models/padMissa.dart';
+import 'package:record_player/painelComandos/comandos.dart';
+import 'package:record_player/screens/telaGravacao.dart';
 
-class EntradaPad extends StatefulWidget {
-  final contexto;
-  const EntradaPad({super.key, this.contexto});
+class Entrada extends StatefulWidget {
+  var isPlaying;
+  var player;
+  Entrada({super.key, player, isPlaying});
 
   @override
-  State<EntradaPad> createState() => _EntradaPadState();
+  State<Entrada> createState() => _EntradaState();
 }
 
-class _EntradaPadState extends State<EntradaPad> {
-  final playerEntrada = AudioPlayer();
-
+class _EntradaState extends State<Entrada> {
+  final canto = DadosPadMissa();
+  final comandos = Comandos();
+  final store = MissaStore();
   PadMissa? objetoConfig;
 
-  final store = MissaStore();
-  bool isPlayingEntrada = false;
-  final controllerEntrada = ControllerMissa();
-
-  PadMissa entrada = PadMissa(
-      texto: 'Entrada',
-      icon: Icons.play_arrow,
-      cor: Colors.amber,
-      isPlaying: false);
-
   @override
-  Widget build(contexto) {
-    return ListenableBuilder(
-      listenable: store,
-      builder: (BuildContext context, Widget? child) {
-        return GestureDetector(
-          // UM TOQUE PLAY MÚSICA
-          onTap: () {
-            controllerEntrada.alterarEntrada();
-            if (controllerEntrada.entradaTocando.value) {
-              entrada.cor = Colors.green;
-            } else {
-              entrada.cor = Colors.amber;
-            }
-            setState(() {});
-          },
-
-          onDoubleTap: () {
-            if (!controllerEntrada.entradaTocando.value) {
-              print('Entrei no config, audio está parado');
-            } else {
-              print(
-                  'Não posso entrar no config pois o áudio está sendo executado');
-            }
-          },
-
-          onLongPress: () {
-            if (!controllerEntrada.entradaTocando.value) {
-              print('Entrei no modo gravação, audio está parado');
-            } else {
-              print(
-                  'Não posso entrar no modo gravação pois o áudio está sendo executado');
-            }
-          },
-
-          onVerticalDragStart: (details) {
-            if (isPlayingEntrada != true) {
-              print('Entrei no config');
-              store.getAlterarConfig();
-              objetoConfig = PadMissa(
-                  texto: entrada.texto,
-                  icon: entrada.icon,
-                  cor: entrada.cor,
-                  isPlaying: false);
-
-              print('deu certo vertical');
-              print('ok');
-            } else {
-              print('Não entrei no config');
-            }
-          },
-
-          child: Container(
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(color: entrada.cor),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(entrada.icon),
-                Text(entrada.texto),
-              ],
-            ),
-          ),
-        );
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      // UM TOQUE PLAY MÚSICA
+      onTap: () {
+        setState(() {
+          if (canto.entrada.isPlaying == null ||
+              canto.entrada.isPlaying == false) {
+            canto.entrada.icon = Icons.stop;
+            canto.entrada.cor = Colors.indigo.shade200;
+            canto.entrada.isPlaying = true;
+            Comandos().playMusic(widget.player, 'Entrada');
+          } else {
+            Comandos().stopMusic(widget.player);
+            canto.entrada.icon = Icons.play_arrow;
+            canto.entrada.cor = Colors.amber;
+            canto.entrada.isPlaying = false;
+          }
+          widget.isPlaying = !widget.isPlaying;
+        });
       },
+
+      // ARRASTAR PARA CIMA EDITA O PAD
+
+      onVerticalDragStart: (details) {
+        if (widget.isPlaying != true) {
+          print('Entrei no config');
+          //store.getAlterarConfig();
+          objetoConfig = PadMissa(
+              texto: canto.entrada.texto,
+              icon: canto.entrada.icon,
+              cor: canto.entrada.cor,
+              isPlaying: false);
+
+          print('deu certo vertical');
+        } else {
+          print('Não entrei no config');
+        }
+      },
+
+      // SEGURAR PARA ENTRAR NA GRAVAÇÃO
+      onLongPress: () {
+        if (widget.isPlaying != true) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => TelaGravacao(
+                    title: 'TelaGravação - ${canto.entrada.texto}',
+                    tipoMusica: 'Entrada')),
+          );
+          print('gravação iniciada');
+        } else {
+          print('Não pode gravar');
+        }
+      },
+
+      child: Container(
+        height: 100,
+        width: 100,
+        decoration: BoxDecoration(color: canto.entrada.cor),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(canto.entrada.icon),
+            Text(canto.entrada.texto),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -10,8 +10,8 @@ import 'package:record_player/service.dart';
 class botaoFuncao extends StatefulWidget {
   final IconData iconTipo;
   final String comando;
-  bool isRecordingEntrada;
-  bool isPlayingEntrada;
+  bool isRecording;
+  bool isPlaying;
   AudioPlayer player;
   final String? musica;
   Duration position;
@@ -20,11 +20,11 @@ class botaoFuncao extends StatefulWidget {
       {super.key,
       required this.iconTipo,
       required this.comando,
-      required this.isPlayingEntrada,
+      required this.isPlaying,
       required this.player,
       required this.musica,
       required this.position,
-      required this.isRecordingEntrada});
+      required this.isRecording});
 
   @override
   State<botaoFuncao> createState() => _botaoFuncaoState();
@@ -62,10 +62,9 @@ class _botaoFuncaoState extends State<botaoFuncao> {
               switch (widget.comando) {
                 case 'recorder':
                   {
-                    if (!widget.isPlayingEntrada &&
-                        !widget.isRecordingEntrada) {
+                    if (!widget.isPlaying && !widget.isRecording) {
                       //Record().start();
-                      comandos.startRec('Santo');
+                      comandos.startRec(widget.musica);
                       print('Nova Gravação em andamento');
                       isRecord = true;
                     } else {
@@ -76,13 +75,13 @@ class _botaoFuncaoState extends State<botaoFuncao> {
 
                 case 'playing':
                   {
-                    if (widget.isPlayingEntrada || widget.isRecordingEntrada) {
+                    if (widget.isPlaying || widget.isRecording) {
                       print('música não pode ser iniciada');
                     } else {
                       print('musica sendo tocada');
                       // widget.player.play(DeviceFileSource(
                       //     '/data/user/0/com.example.record_player/app_flutter/Entrada.m4a'));
-                      Comandos().playMusic(widget.player, 'Ato');
+                      Comandos().playMusic(widget.player, widget.musica);
                       widget.player.onPlayerComplete.listen((event) {
                         widget.position = Duration.zero;
                         var tempo = widget.player.onDurationChanged;
@@ -93,7 +92,7 @@ class _botaoFuncaoState extends State<botaoFuncao> {
 
                 case 'pause':
                   {
-                    if (widget.isPlayingEntrada) {
+                    if (widget.isPlaying) {
                       widget.player.pause();
                     } else {
                       widget.player.pause();

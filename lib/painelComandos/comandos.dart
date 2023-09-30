@@ -43,8 +43,9 @@ class Comandos {
   }
 
   void playMusic(entrada, tipoMusica) {
+    String tipo = tipoMusica;
     Source urlSource = UrlSource(
-        "/data/user/0/com.example.record_player/app_flutter/$tipoMusica.m4a");
+        "/data/user/0/com.example.record_player/app_flutter/$tipo.m4a");
     entrada.play(urlSource);
   }
 

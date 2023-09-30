@@ -17,13 +17,13 @@ class TelaGravacao extends StatefulWidget {
 }
 
 class _TelaGravacaoState extends State<TelaGravacao> {
-  AudioPlayer playerEntrada = AudioPlayer();
+  AudioPlayer player = AudioPlayer();
   Record recordPlayer = Record();
 
-  bool isPlayingEntrada = false;
-  bool isRecodingEntrada = false;
-  Duration durationEntrada = Duration.zero;
-  Duration positionEntrada = Duration.zero;
+  bool isPlaying = false;
+  bool isRecoding = false;
+  Duration duration = Duration.zero;
+  Duration position = Duration.zero;
   Color corContainer = Colors.amber;
 
   String formatTime(int seconds) {
@@ -36,25 +36,25 @@ class _TelaGravacaoState extends State<TelaGravacao> {
 
     recordPlayer.onStateChanged().listen((state) {
       setState(() {
-        isRecodingEntrada = state == RecordState.record;
+        isRecoding = state == RecordState.record;
       });
     });
 
-    playerEntrada.onPlayerStateChanged.listen((state) {
+    player.onPlayerStateChanged.listen((state) {
       setState(() {
-        isPlayingEntrada = state == PlayerState.playing;
+        isPlaying = state == PlayerState.playing;
       });
     });
 
-    playerEntrada.onDurationChanged.listen((newDuration) {
+    player.onDurationChanged.listen((newDuration) {
       setState(() {
-        durationEntrada = newDuration;
+        duration = newDuration;
       });
     });
 
-    playerEntrada.onPositionChanged.listen((newPosition) {
+    player.onPositionChanged.listen((newPosition) {
       setState(() {
-        positionEntrada = newPosition;
+        position = newPosition;
       });
     });
   }
@@ -62,7 +62,7 @@ class _TelaGravacaoState extends State<TelaGravacao> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue,
+      backgroundColor: const Color.fromARGB(255, 88, 75, 28),
       appBar: AppBar(
         title: Text(
           widget.title,
@@ -90,12 +90,12 @@ class _TelaGravacaoState extends State<TelaGravacao> {
                 height: 45,
                 child: Slider(
                   min: 0,
-                  max: durationEntrada.inSeconds.toDouble(),
-                  value: positionEntrada.inSeconds.toDouble(),
+                  max: duration.inSeconds.toDouble(),
+                  value: position.inSeconds.toDouble(),
                   onChanged: (value) {
                     final position = Duration(seconds: value.toInt());
-                    playerEntrada.seek(position);
-                    playerEntrada.resume();
+                    player.seek(position);
+                    player.resume();
                   },
                 ),
               ),
@@ -106,11 +106,10 @@ class _TelaGravacaoState extends State<TelaGravacao> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   Text(
-                    formatTime(positionEntrada.inSeconds),
+                    formatTime(position.inSeconds),
                     style: TextStyle(fontSize: 12),
                   ),
-                  Text(
-                      formatTime((durationEntrada - positionEntrada).inSeconds),
+                  Text(formatTime((duration - position).inSeconds),
                       style: TextStyle(fontSize: 12)),
                 ],
               ),
@@ -138,46 +137,42 @@ class _TelaGravacaoState extends State<TelaGravacao> {
                           botaoFuncao(
                             iconTipo: Icons.circle,
                             comando: "recorder",
-                            isPlayingEntrada: isPlayingEntrada,
-                            isRecordingEntrada: isRecodingEntrada,
-                            musica: null,
-                            player: playerEntrada,
-                            position: positionEntrada,
+                            isPlaying: isPlaying,
+                            isRecording: isRecoding,
+                            musica: widget.tipoMusica,
+                            player: player,
+                            position: position,
                           ),
                           GestureDetector(
-                            onTap: () {
-                              // playerEntrada.play(DeviceFileSource(
-                              //     '/data/user/0/com.example.record_player/app_flutter/Entrada.m4a'));
-                            },
+                            onTap: () {},
                             child: botaoFuncao(
                               iconTipo: Icons.play_arrow,
                               comando: "playing",
-                              isPlayingEntrada: isPlayingEntrada,
-                              isRecordingEntrada: isRecodingEntrada,
-                              musica:
-                                  '/data/user/0/com.example.record_player/app_flutter/Ato.m4a',
-                              player: playerEntrada,
-                              position: positionEntrada,
+                              isPlaying: isPlaying,
+                              isRecording: isRecoding,
+                              musica: widget.tipoMusica,
+                              player: player,
+                              position: position,
                             ),
                           ),
                           botaoFuncao(
                             iconTipo: Icons.pause,
                             comando: "pause",
-                            isPlayingEntrada: isPlayingEntrada,
-                            isRecordingEntrada: isRecodingEntrada,
+                            isPlaying: isPlaying,
+                            isRecording: isRecoding,
                             musica:
                                 '/data/user/0/com.example.record_player/app_flutter/Ato.m4a',
-                            player: playerEntrada,
-                            position: positionEntrada,
+                            player: player,
+                            position: position,
                           ),
                           botaoFuncao(
                             iconTipo: Icons.stop,
                             comando: "stop",
-                            isPlayingEntrada: isPlayingEntrada,
-                            isRecordingEntrada: isRecodingEntrada,
+                            isPlaying: isPlaying,
+                            isRecording: isRecoding,
                             musica: null,
-                            player: playerEntrada,
-                            position: positionEntrada,
+                            player: player,
+                            position: position,
                           ),
                         ],
                       ),
